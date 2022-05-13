@@ -2,5 +2,13 @@
   "name": "ticktacktoe",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "dev": "coffee --watch --output build src",
+    "start": "node build/index.js"
+
+  },
+  "devDependencies": {
+    "coffeescript": "^2.7.0"
+  }
 }
