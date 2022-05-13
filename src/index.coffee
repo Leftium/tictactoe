@@ -65,9 +65,8 @@ command = ''
 output = ''
 winner = null
 
-done = false
-
-while not done
+`MAINLOOP: // For nested break.`
+while true
     process.stdout.write('\u001b[2J\u001b[0;0H')  # Clear terminal and move cursor to 0,0
     console.log renderBoard(board)
 
@@ -85,18 +84,21 @@ while not done
     input = prompt "Turn #{turn}. Enter command for player #{symbol player}: "
     command = input.trim().toLowerCase()[0] or DEFAULT_COMMAND
 
-    if command in '123456789'
-        if board[command] is 0
-            board[command] = player
-            if winner = checkWinner board
-                gameOverMessage = "Player #{symbol winner} wins!"
-            else if turn > 8  # No more moves left.
-                gameOverMessage = "Tie game!"
-
-
-            player = 3-player  # Switches players.
-            turn++
+    switch
+        when (position = command) in '123456789'
+            if board[position] isnt 0
+                print 'That square has already been played.\n'
+            else
+                board[position] = player
+                if winner = checkWinner board
+                    gameOverMessage = "Player #{symbol winner} wins!"
+                else if turn > 8  # No more moves left.
+                    gameOverMessage = "Tie game!"
+                player = 3-player  # Switches players.
+                turn++
+        when command is 'r', command is 'h'
+            print 'Command not implemented yet!'
+        when command is 'q'
+            `break MAINLOOP`
         else
-            print "That square has already been played.\n"
-
-    if command is 'q' then done = true
+            print 'Unknown command.'
