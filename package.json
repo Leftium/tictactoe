@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "coffee --watch --output build src",
     "start": "node build/index.js"
-
   },
   "devDependencies": {
     "coffeescript": "^2.7.0"
+  },
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
   }
 }
