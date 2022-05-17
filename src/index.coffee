@@ -1,6 +1,5 @@
 prompt = require("prompt-sync")({ sigint: true })
 
-DEFAULT_COMMAND = 'q'
 MENU_TEXT = """___ Commands ___
     1 2 3
     4 5 6  Play square corresponding to number.
@@ -8,12 +7,10 @@ MENU_TEXT = """___ Commands ___
         R  Play random square.             (TODO)
         H  Play square using heuristic AI. (TODO)
         Q  Quit.                           [Default]\n"""
+DEFAULT_COMMAND = 'q'
 WIN_ROWS = [ [1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [7, 5, 3] ]
 
 print = (s) -> output += "#{s}\n"
-
-# Convert player number to symbol. Odds are O, evens are X.
-symbol = (player) -> if player % 2 then 'O' else 'X'
 
 renderBoard = (board) -> """
     \ #{board[1]} | #{board[2]} | #{board[3]}\n---+---+---
@@ -27,8 +24,10 @@ checkWinner = (board) ->
             return winner
     return false
 
-# Current turn. Current player = turn % 2.
-turn = 1
+# Convert player number to symbol. Odds are O, evens are X.
+symbol = (player) -> if player % 2 then 'O' else 'X'
+
+turn = 1  # Current turn. Current player = (turn % 2).
 
 # The board is just an array of 9 values. 0-index is not used. (1-indexed board!)
 board = new Array(10).fill ' '
@@ -45,7 +44,7 @@ while true
 
     if gameOverMessage
         console.log gameOverMessage
-        break
+        break  ## Exit main loop.
 
     console.log output
     output = ''
