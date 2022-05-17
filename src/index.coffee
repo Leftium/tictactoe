@@ -27,11 +27,8 @@ checkWinner = (board) ->
             return winner
     return false
 
-# Current turn
+# Current turn. Current player = turn % 2.
 turn = 1
-
-# Current player
-player = 1
 
 # The board is just an array of 9 values. 0-index is not used. (1-indexed board!)
 board = new Array(10).fill ' '
@@ -54,7 +51,7 @@ while true
     output = ''
 
     console.log MENU_TEXT
-    input = prompt "Turn #{turn}. Enter command for player #{symbol player}: "
+    input = prompt "Turn #{turn}. Enter command for player #{symbol turn % 2}: "
     command = input.trim().toLowerCase()[0] or DEFAULT_COMMAND
 
     position = false
@@ -72,10 +69,9 @@ while true
         if board[position] isnt ' '
             print 'That square has already been played.'
         else
-            board[position] = symbol player
+            board[position] = symbol turn % 2
             if winner = checkWinner board
                 gameOverMessage = "Player #{winner} wins!"
             else if turn > 8  # No more moves left.
                 gameOverMessage = "Tie game!"
-            player = 3-player  # Switches players.
             turn++
