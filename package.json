@@ -5,14 +5,16 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsc --watch",
-    "start": "node build/index.js"
+    "start": "set DEBUG=*&& node build/index.js"
   },
   "dependencies": {
     "prompt-sync": "^4.2.0"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.7",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
+    "debug": "^4.3.4",
     "eslint": "^8.31.0",
     "eslint-config-prettier": "^8.6.0",
     "prettier": "^2.8.3",
