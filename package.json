@@ -13,6 +13,8 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
+    "@types/node": "^18.11.18",
+    "@types/prompt-sync": "^4.2.0",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
     "debug": "^4.3.4",

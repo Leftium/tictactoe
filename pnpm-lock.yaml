@@ -2,6 +2,8 @@ lockfileVersion: 5.4
 
 specifiers:
   '@types/debug': ^4.1.7
+  '@types/node': ^18.11.18
+  '@types/prompt-sync': ^4.2.0
   '@typescript-eslint/eslint-plugin': ^5.48.1
   '@typescript-eslint/parser': ^5.48.1
   debug: ^4.3.4
@@ -16,6 +18,8 @@ dependencies:
 
 devDependencies:
   '@types/debug': 4.1.7
+  '@types/node': 18.11.18
+  '@types/prompt-sync': 4.2.0
   '@typescript-eslint/eslint-plugin': 5.48.1_3jon24igvnqaqexgwtxk6nkpse
   '@typescript-eslint/parser': 5.48.1_iukboom6ndih5an6iafl45j2fe
   debug: 4.3.4
@@ -96,6 +100,14 @@ packages:
 
   /@types/ms/0.7.31:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
+    dev: true
+
+  /@types/node/18.11.18:
+    resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
+    dev: true
+
+  /@types/prompt-sync/4.2.0:
+    resolution: {integrity: sha512-5RPQYDT7MNkt+vq6xp58tSPx4THANyQcBSaw3Ni+KV7MUAgvUUbmCsQmcPVrcc8dwuURSPixz2qTJdJF6ABSKw==}
     dev: true
 
   /@types/semver/7.3.13:
