@@ -118,10 +118,8 @@ function makeState(boardOrState: string | State) {
 	}
 }
 
-function replaceAt(string: string, index: number, replacement: string) {
-	return (
-		string.substring(0, index) + replacement + string.substring(index + 1)
-	)
+function replaceAt(s: string, index: number, replacement: string) {
+	return s.substring(0, index) + replacement + s.substring(index + 1)
 }
 
 function processMove(position: number, board: Board) {
