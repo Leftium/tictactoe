@@ -234,7 +234,7 @@ MAINLOOP: while (true) {
 		menuText = `${menuText}${MOVE_MENU_TEXT}\n\n${GAME_MENU_TEXT}`
 	} else {
 		menuText = `${menuText}${GAME_MENU_TEXT}`
-		if (state.winningRows) {
+		if (state.winningRows.length) {
 			const winningPlayer =
 				board[parseInt(state.winningRows[0][0])].toUpperCase()
 			gameStatus = `Player ${winningPlayer} won!`
