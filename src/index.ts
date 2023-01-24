@@ -28,7 +28,7 @@ type Player = 'x' | 'o'
 
 // The Board contains everything we need to know about the game state;
 // other properties are derived for convenience.
-type State = {
+type BoardDetails = {
 	board: Board
 	counts: {
 		x: number
@@ -46,7 +46,7 @@ type Event = {
 	data: unknown
 }
 
-const INITIAL_STATE = '___ ___ ___'
+const INITIAL_BOARD = '___ ___ ___'
 
 // 1. Strip insignificant characters.
 // 2. Lower case.
@@ -66,19 +66,19 @@ function prettyBoard(board: Board) {
 	return normalizeBoard(board).slice(1).replace(/.../g, '$& ').slice(0, -1)
 }
 
-function renderBoard(board: Board) {
+function renderBoard(board: Board, line1 = '', line2 = '', line3 = '') {
 	const b = normalizeBoard(board).replace(/_/g, ' ')
 	return (
-		` ${b[1]} | ${b[2]} | ${b[3]}\n---+---+---\n` +
-		` ${b[4]} | ${b[5]} | ${b[6]}\n---+---+---\n` +
-		` ${b[7]} | ${b[8]} | ${b[9]}\n`
+		` ${b[1]} | ${b[2]} | ${b[3]}      ${line1}\n---+---+---\n` +
+		` ${b[4]} | ${b[5]} | ${b[6]}      ${line2}\n---+---+---\n` +
+		` ${b[7]} | ${b[8]} | ${b[9]}      ${line3}`
 	)
 }
 
 // Derive useful info about game state from simple string representation of board.
-function makeState(boardOrState: string | State) {
+function getDetails(boardOrState: string | BoardDetails) {
 	if (typeof boardOrState !== 'string') {
-		return boardOrState as State
+		return boardOrState as BoardDetails
 	}
 
 	const board = normalizeBoard(boardOrState)
@@ -127,14 +127,14 @@ function processMove(position: number, board: Board) {
 		board,
 		events: [] as Event[],
 	}
-	const state = makeState(board)
+	const boardDetails = getDetails(board)
 
-	const player: Player = state.currentPlayer
-	if (state.validMoves.includes(position)) {
+	const player: Player = boardDetails.currentPlayer
+	if (boardDetails.validMoves.includes(position)) {
 		result.board = replaceAt(normalizeBoard(result.board), position, player)
 		result.events.push(makeEvent('moved', { player, position }))
 
-		const nextState = makeState(result.board)
+		const nextState = getDetails(result.board)
 		const winningRows = nextState.winningRows
 		if (winningRows.length) {
 			result.events.push(
@@ -197,8 +197,8 @@ function processInput(input: string, board: Board) {
 			break
 
 		case 'r':
-		case 'h':
 		case 'u':
+		case 'h':
 			result.events.push(
 				makeEvent('command-not-implemented', { command })
 			)
@@ -215,19 +215,23 @@ function processInput(input: string, board: Board) {
 	return result
 }
 
-let board = INITIAL_STATE
+let board = INITIAL_BOARD
 
-let input: string
+let input = ''
+
+let resultText = ''
 
 // eslint-disable-next-line no-constant-condition
 MAINLOOP: while (true) {
 	// process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
-	const state = makeState(board)
+	const state = getDetails(board)
 	log('state: %O', state)
 
-	let gameStatus = `Turn: ${
+	let gameStatus = `Turn ${
 		state.turnNumber
-	}. Player: ${state.currentPlayer.toUpperCase()}`
+	}: Player ${state.currentPlayer.toUpperCase()}`
+
+	const lastInput = input ? `Last input: ${input}` : ''
 
 	let menuText = `\n${'______ Commands '.padEnd(80, '_')}\n`
 	if (state.validMoves.length) {
@@ -244,19 +248,29 @@ MAINLOOP: while (true) {
 	}
 
 	console.log()
-	console.log(renderBoard(board))
-	console.log(gameStatus)
+	console.log(renderBoard(board, gameStatus, lastInput, resultText))
 	console.log(menuText)
 	input = prompt('Enter command (1-9/r/h/u/n/Q): ')
 	const result = processInput(input, state.board)
 
+	resultText = ''
 	for (const event of result.events) {
 		switch (event.name) {
 			case 'quit':
 				break MAINLOOP
 
+			case 'invalid-move':
+				resultText = `Invalid move!`
+				break
+
+			case 'command-not-implemented':
+				resultText = `Sorry~ Not implemented yet!`
+				break
+
 			case 'moved':
-				// Eat these events.
+				resultText = `Player ${event.data.player.toUpperCase()} played square ${
+					event.data.position
+				}`
 				break
 			default:
 				log('Unknown event: %o', event)
