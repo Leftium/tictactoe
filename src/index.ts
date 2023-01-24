@@ -41,7 +41,7 @@ type BoardDetails = {
 	winningRows: Row[]
 }
 
-type Event = {
+type EsEvent = {
 	name: string
 	data: unknown
 }
@@ -125,7 +125,7 @@ function replaceAt(s: string, index: number, replacement: string) {
 function processMove(position: number, board: Board) {
 	const result = {
 		board,
-		events: [] as Event[],
+		events: [] as EsEvent[],
 	}
 	const boardDetails = getDetails(board)
 
@@ -177,7 +177,7 @@ function parseInput(input: string) {
 function processInput(input: string, board: Board) {
 	let result = {
 		board,
-		events: [] as Event[],
+		events: [] as EsEvent[],
 	}
 
 	const { command, params } = parseInput(input)
