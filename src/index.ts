@@ -84,7 +84,7 @@ function renderBoard(board: Board, line1 = '', line2 = '', line3 = '') {
 }
 
 // Derive useful info about game state from simple string representation of board.
-function getDetails(boardOrState: string | BoardDetails) {
+function getDetails(boardOrState: Board | BoardDetails) {
 	if (typeof boardOrState !== 'string') {
 		return boardOrState as BoardDetails
 	}
