@@ -46,6 +46,14 @@ type EsEvent = {
 	data: unknown
 }
 
+function makeEvent(name: string, data?: unknown) {
+	return { name, data }
+}
+
+function replaceAt(s: string, index: number, replacement: string) {
+	return s.substring(0, index) + replacement + s.substring(index + 1)
+}
+
 const INITIAL_BOARD = '___ ___ ___'
 
 // 1. Strip insignificant characters.
@@ -118,10 +126,6 @@ function getDetails(boardOrState: string | BoardDetails) {
 	}
 }
 
-function replaceAt(s: string, index: number, replacement: string) {
-	return s.substring(0, index) + replacement + s.substring(index + 1)
-}
-
 function processMove(position: number, board: Board) {
 	const result = {
 		board,
@@ -147,13 +151,9 @@ function processMove(position: number, board: Board) {
 			result.events.push(makeEvent('game-tied'))
 		}
 	} else {
-		result.events.push(makeEvent('invalid-move', { player, position }))
+		result.events.push(makeEvent('got-invalid-move', { player, position }))
 	}
 	return result
-}
-
-function makeEvent(name: string, data?: unknown) {
-	return { name, data }
 }
 
 // Split input into command and params.
@@ -184,12 +184,12 @@ function processInput(input: string, board: Board) {
 
 	switch (command) {
 		case 'q':
-			result.events.push(makeEvent('quit'))
+			result.events.push(makeEvent('got-quit'))
 			break
 
 		case 'n':
 			result.board = ''
-			result.events.push(makeEvent('new-game'))
+			result.events.push(makeEvent('started-new-game'))
 			break
 
 		case 'm':
@@ -200,7 +200,7 @@ function processInput(input: string, board: Board) {
 		case 'u':
 		case 'h':
 			result.events.push(
-				makeEvent('command-not-implemented', { command })
+				makeEvent('got-command-not-implemented', { command })
 			)
 			break
 
@@ -210,7 +210,7 @@ function processInput(input: string, board: Board) {
 			break
 
 		default:
-			result.events.push(makeEvent('command-unknown', { command }))
+			result.events.push(makeEvent('got-command-unknown', { command }))
 	}
 	return result
 }
@@ -256,14 +256,14 @@ MAINLOOP: while (true) {
 	resultText = ''
 	for (const event of result.events) {
 		switch (event.name) {
-			case 'quit':
+			case 'got-quit':
 				break MAINLOOP
 
-			case 'invalid-move':
+			case 'got-invalid-move':
 				resultText = `Invalid move!`
 				break
 
-			case 'command-not-implemented':
+			case 'got-command-not-implemented':
 				resultText = `Sorry~ Not implemented yet!`
 				break
 
