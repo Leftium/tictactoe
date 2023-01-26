@@ -161,24 +161,6 @@ function processMove(position: number, board: Board) {
 	return result
 }
 
-// Split input into command and params.
-function parseInput(input: string) {
-	const inputChars = input.trim().toLowerCase().split('')
-	const inputWords = input.trim().toLowerCase().split(' ')
-
-	let command = inputChars[0] || DEFAULT_COMMAND
-	let params =
-		inputWords.length > 1
-			? input.split(' ').slice(1).join(' ')
-			: inputChars.slice(1).join('')
-
-	if ('123456789'.includes(command)) {
-		params = command
-		command = 'm'
-	}
-	return { command, params }
-}
-
 function processInput(input: string, board: Board) {
 	let result = {
 		board,
@@ -218,6 +200,24 @@ function processInput(input: string, board: Board) {
 			result.events.push(makeEvent('got-command-unknown', { command }))
 	}
 	return result
+}
+
+// Split input into command and params.
+function parseInput(input: string) {
+	const inputChars = input.trim().toLowerCase().split('')
+	const inputWords = input.trim().toLowerCase().split(' ')
+
+	let command = inputChars[0] || DEFAULT_COMMAND
+	let params =
+		inputWords.length > 1
+			? input.split(' ').slice(1).join(' ')
+			: inputChars.slice(1).join('')
+
+	if ('123456789'.includes(command)) {
+		params = command
+		command = 'm'
+	}
+	return { command, params }
 }
 
 let board = INITIAL_BOARD
