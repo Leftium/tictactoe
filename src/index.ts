@@ -229,23 +229,23 @@ let resultText = ''
 // eslint-disable-next-line no-constant-condition
 MAINLOOP: while (true) {
 	// process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
-	const state = getDetails(board)
-	log('state: %O', state)
+	const boardDetails = getDetails(board)
+	log('boardDetails: %O', boardDetails)
 
 	let gameStatus = `Turn ${
-		state.turnNumber
-	}: Player ${state.currentPlayer.toUpperCase()}`
+		boardDetails.turnNumber
+	}: Player ${boardDetails.currentPlayer.toUpperCase()}`
 
 	const lastInput = input ? `Last input: ${input}` : ''
 
 	let menuText = `\n${'______ Commands '.padEnd(80, '_')}\n`
-	if (state.validMoves.length) {
+	if (boardDetails.validMoves.length) {
 		menuText = `${menuText}${MOVE_MENU_TEXT}\n\n${GAME_MENU_TEXT}`
 	} else {
 		menuText = `${menuText}${GAME_MENU_TEXT}`
-		if (state.winningRows.length) {
+		if (boardDetails.winningRows.length) {
 			const winningPlayer =
-				board[parseInt(state.winningRows[0][0])].toUpperCase()
+				board[parseInt(boardDetails.winningRows[0][0])].toUpperCase()
 			gameStatus = `Player ${winningPlayer} won!`
 		} else {
 			gameStatus = 'Tie game...'
@@ -256,7 +256,7 @@ MAINLOOP: while (true) {
 	console.log(renderBoard(board, gameStatus, lastInput, resultText))
 	console.log(menuText)
 	input = prompt('Enter command (1-9/r/h/u/n/Q): ')
-	const result = processInput(input, state.board)
+	const result = processInput(input, boardDetails.board)
 
 	resultText = ''
 	for (const event of result.events) {
