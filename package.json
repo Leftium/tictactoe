@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsc --watch",
-    "start": "set DEBUG=*&& node build/index.js"
+    "start": "node build/index.js",
+    "debug": "set DEBUG=*&& node build/index.js"
   },
   "dependencies": {
     "prompt-sync": "^4.2.0"
