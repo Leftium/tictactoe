@@ -135,9 +135,7 @@ function getDetails(boardOrState: Board | BoardDetails) {
 
 	const validMoves = winningRows.length
 		? []
-		: ([...board.matchAll(/_/g)] || []).map(
-				(match) => match.index as number
-		  )
+		: ([...board.matchAll(/_/g)] || []).map((match) => match.index)
 
 	return {
 		board: prettyBoard(board),
