@@ -226,9 +226,8 @@ let resultText = ''
 
 // eslint-disable-next-line no-constant-condition
 MAINLOOP: while (true) {
-	if (!process.env.DEBUG) {
-		process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
-	}
+	process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
+
 	const boardDetails = getDetails(board)
 	log('boardDetails: %O', boardDetails)
 
