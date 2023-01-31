@@ -67,7 +67,7 @@ function parseInput(input: string) {
 	let command = inputChars[0] || DEFAULT_COMMAND
 	let params =
 		inputWords.length > 1
-			? input.split(' ').slice(1).join(' ')
+			? inputWords.slice(1).join(' ')
 			: inputChars.slice(1).join('')
 
 	if ('123456789'.includes(command)) {
