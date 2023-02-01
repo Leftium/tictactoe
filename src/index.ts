@@ -173,6 +173,7 @@ function processMove(position: number, board: Board) {
 		result.events.push(makeEvent('moved', { player, position }))
 
 		// todo?: remove unused 'game-won', 'game-tied' events?
+		// question: nextState not needed in this decider function; generally true for all deciders?
 		const nextState = getDetails(result.board)
 		const winningRows = nextState.winningRows
 		if (winningRows.length) {
@@ -192,6 +193,7 @@ function processMove(position: number, board: Board) {
 }
 
 // todo: change board: Board -> events[] EsEvent[].
+// question: naming convention for events?
 function processInput(input: string, board: Board) {
 	// todo: return only events.
 	let result = {
@@ -237,6 +239,15 @@ function processInput(input: string, board: Board) {
 }
 
 // todo: replace with events[]: EsEvents[].
+
+/*
+// todo: implement this function.
+function boardFromEvents(events: EsEvent[]): Board {
+    log(events)
+    return INITIAL_BOARD
+}
+*/
+
 let board = INITIAL_BOARD
 
 let input = ''
