@@ -21,6 +21,8 @@ const GAME_MENU_TEXT = `       [U]ndo last move  (TODO)
 
 const DEFAULT_COMMAND = 'q'
 
+// idea: add type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; use in types below.
+
 // A string with 3 positions.
 type Row = '123' | '456' | '789' | '147' | '258' | '369' | '159' | '357'
 
@@ -29,10 +31,17 @@ const ROWS: Row[] = ['123', '456', '789', '147', '258', '369', '159', '357']
 // A Board is a '#' followed by 9 characters in the set [XxOo_].
 type Board = string
 
+const INITIAL_BOARD = '___ ___ ___'
+
+// idea: define more strict type NormalizedBoard.
+// idea: define const PLAYER_X, PLAYER_O
+
 type Player = 'x' | 'o'
 
 // The Board contains everything we need to know about the game state;
 // other properties are derived for convenience.
+
+// idea: restrict values for counts, turnNumber
 type BoardDetails = {
 	board: Board
 	counts: {
@@ -46,6 +55,7 @@ type BoardDetails = {
 	winningRows: Row[]
 }
 
+// question: worth adding .type? (state, effect, etc...)
 type EsEvent = {
 	name: string
 	data: unknown
@@ -76,8 +86,6 @@ function parseInput(input: string) {
 	}
 	return { command, params }
 }
-
-const INITIAL_BOARD = '___ ___ ___'
 
 // 1. Strip insignificant characters.
 // 2. Lower case.
@@ -125,6 +133,7 @@ function getDetails(boardOrState: Board | BoardDetails) {
 	const currentPlayer = (turnNumber % 2 ? 'x' : 'o') as Player
 
 	const winningRows = ROWS.filter((row) => {
+		// Computer-friendly array from human-friendly string:
 		const intRow = row.split('').map((c) => parseInt(c, 10))
 		return (
 			board[intRow[0]] !== '_' &&
@@ -147,7 +156,10 @@ function getDetails(boardOrState: Board | BoardDetails) {
 	}
 }
 
+// todo?: inline into processInput()?
+// todo: change board: Board -> events[] EsEvent[].
 function processMove(position: number, board: Board) {
+	// todo: return only events.
 	const result = {
 		board,
 		events: [] as EsEvent[],
@@ -156,9 +168,11 @@ function processMove(position: number, board: Board) {
 
 	const player: Player = boardDetails.currentPlayer
 	if (boardDetails.validMoves.includes(position)) {
+		// todo: remove state mutation.
 		result.board = replaceAt(normalizeBoard(result.board), position, player)
 		result.events.push(makeEvent('moved', { player, position }))
 
+		// todo?: remove unused 'game-won', 'game-tied' events?
 		const nextState = getDetails(result.board)
 		const winningRows = nextState.winningRows
 		if (winningRows.length) {
@@ -177,7 +191,9 @@ function processMove(position: number, board: Board) {
 	return result
 }
 
+// todo: change board: Board -> events[] EsEvent[].
 function processInput(input: string, board: Board) {
+	// todo: return only events.
 	let result = {
 		board,
 		events: [] as EsEvent[],
@@ -191,6 +207,7 @@ function processInput(input: string, board: Board) {
 			break
 
 		case 'n':
+			// todo: remove state mutation.
 			result.board = ''
 			result.events.push(makeEvent('started-new-game'))
 			break
@@ -208,6 +225,7 @@ function processInput(input: string, board: Board) {
 			break
 
 		case 's':
+			// todo: remove state mutation.
 			result.board = input
 			result.events.push(makeEvent('board-set', { board: params }))
 			break
@@ -218,6 +236,7 @@ function processInput(input: string, board: Board) {
 	return result
 }
 
+// todo: replace with events[]: EsEvents[].
 let board = INITIAL_BOARD
 
 let input = ''
@@ -280,5 +299,6 @@ MAINLOOP: while (true) {
 				log('Unknown event: %o', event)
 		}
 	}
+	// todo: remove state mutation.
 	board = result.board
 }
