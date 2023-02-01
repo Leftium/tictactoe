@@ -157,7 +157,7 @@ function getDetails(boardOrState: Board | BoardDetails) {
 }
 
 // todo?: inline into processInput()?
-// todo: change board: Board -> events[] EsEvent[].
+// todo: change board: Board -> events: EsEvent[].
 function processMove(position: number, board: Board) {
 	// todo: return only events.
 	const result = {
@@ -192,7 +192,7 @@ function processMove(position: number, board: Board) {
 	return result
 }
 
-// todo: change board: Board -> events[] EsEvent[].
+// todo: change board: Board -> events: EsEvent[].
 // question: naming convention for events?
 function processInput(input: string, board: Board) {
 	// todo: return only events.
@@ -248,7 +248,7 @@ function boardFromEvents(events: EsEvent[]): Board {
 }
 */
 
-// todo: replace with events[]: EsEvents[].
+// todo: replace with events: EsEvent[].
 let board = INITIAL_BOARD
 
 let input = ''
