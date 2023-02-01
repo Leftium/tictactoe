@@ -201,6 +201,8 @@ function processInput(input: string, board: Board) {
 		events: [] as EsEvent[],
 	}
 
+	const boardDetails = getDetails(board)
+
 	const { command, params } = parseInput(input)
 
 	switch (command) {
@@ -219,6 +221,18 @@ function processInput(input: string, board: Board) {
 			break
 
 		case 'r':
+			if (boardDetails.validMoves.length) {
+				result = processMove(_.sample(boardDetails.validMoves), board)
+			} else {
+				result.events.push(
+					makeEvent('got-invalid-move', {
+						player: boardDetails.currentPlayer,
+						position: '0',
+					})
+				)
+			}
+			break
+			
 		case 'u':
 		case 'h':
 			result.events.push(
