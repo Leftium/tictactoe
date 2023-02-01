@@ -238,16 +238,17 @@ function processInput(input: string, board: Board) {
 	return result
 }
 
-// todo: replace with events[]: EsEvents[].
-
 /*
 // todo: implement this function.
 function boardFromEvents(events: EsEvent[]): Board {
-    log(events)
+    log('boardFromEvents %O', events)
+    // todo: handle 'moved' event
+    // todo: handle 'board-set' event
     return INITIAL_BOARD
 }
 */
 
+// todo: replace with events[]: EsEvents[].
 let board = INITIAL_BOARD
 
 let input = ''
