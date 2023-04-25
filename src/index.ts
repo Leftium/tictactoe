@@ -12,14 +12,14 @@ log('Lodash: %s', _.VERSION)
 const MOVE_MENU_TEXT = `1 2 3
 4 5 6  [1-9] Make move corresponding to square
 7 8 9
-       [R]andom square   (TODO)
+       [R]andom square   [Default]
        [H]euristic AI    (TODO)`
 
 const GAME_MENU_TEXT = `       [U]ndo last move  (TODO)
        [N]ew Game
-       [Q]uit            [Default]\n`
+       [Q]uit\n`
 
-const DEFAULT_COMMAND = 'q'
+const DEFAULT_COMMAND = 'r'
 
 // idea: add type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; use in types below.
 
@@ -232,7 +232,7 @@ function processInput(input: string, board: Board) {
 				)
 			}
 			break
-			
+
 		case 'u':
 		case 'h':
 			result.events.push(
