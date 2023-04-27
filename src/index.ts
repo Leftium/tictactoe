@@ -157,23 +157,17 @@ function getDetails(boardOrState: Board | BoardDetails) {
 }
 
 // todo?: inline into processInput()?
-// todo: change board: Board -> events: EsEvent[].
-function processMove(position: number, board: Board) {
-	// todo: return only events.
-	const result = {
-		board,
-		events: [] as EsEvent[],
-	}
-	const boardDetails = getDetails(board)
+function processMove(position: number, events: EsEvent[]) {
+	const newEvents = [...events]
+	const boardDetails = getDetails(boardFromEvents(events))
 
 	const player: Player = boardDetails.currentPlayer
 	if (boardDetails.validMoves.includes(position)) {
-		// todo: remove state mutation.
-		result.board = replaceAt(normalizeBoard(result.board), position, player)
-		result.events.push(makeEvent('moved', { player, position }))
+		newEvents.push(makeEvent('moved', { player, position }))
 
 		// todo?: remove unused 'game-won', 'game-tied' events?
 		// question: nextState not needed in this decider function; generally true for all deciders?
+		/*
 		const nextState = getDetails(result.board)
 		const winningRows = nextState.winningRows
 		if (winningRows.length) {
@@ -186,45 +180,42 @@ function processMove(position: number, board: Board) {
 		} else if (!nextState.validMoves.length) {
 			result.events.push(makeEvent('game-tied'))
 		}
+        */
 	} else {
-		result.events.push(makeEvent('got-invalid-move', { player, position }))
+		newEvents.push(makeEvent('got-invalid-move', { player, position }))
 	}
-	return result
+	return newEvents
 }
 
-// todo: change board: Board -> events: EsEvent[].
 // question: naming convention for events?
-function processInput(input: string, board: Board) {
-	// todo: return only events.
-	let result = {
-		board,
-		events: [] as EsEvent[],
-	}
+function processInput(input: string, events: EsEvent[]) {
+	let newEvents = [...events]
 
-	const boardDetails = getDetails(board)
+	const boardDetails = getDetails(boardFromEvents(events))
 
 	const { command, params } = parseInput(input)
 
 	switch (command) {
 		case 'q':
-			result.events.push(makeEvent('got-quit'))
+			newEvents.push(makeEvent('got-quit'))
 			break
 
 		case 'n':
-			// todo: remove state mutation.
-			result.board = ''
-			result.events.push(makeEvent('started-new-game'))
+			newEvents.push(makeEvent('started-new-game'))
 			break
 
 		case 'm':
-			result = processMove(parseInt(params, 10), board)
+			newEvents = processMove(parseInt(params, 10), events)
 			break
 
 		case 'r':
 			if (boardDetails.validMoves.length) {
-				result = processMove(_.sample(boardDetails.validMoves), board)
+				newEvents = processMove(
+					_.sample(boardDetails.validMoves),
+					events
+				)
 			} else {
-				result.events.push(
+				newEvents.push(
 					makeEvent('got-invalid-move', {
 						player: boardDetails.currentPlayer,
 						position: '0',
@@ -235,35 +226,47 @@ function processInput(input: string, board: Board) {
 
 		case 'u':
 		case 'h':
-			result.events.push(
+			newEvents.push(
 				makeEvent('got-command-not-implemented', { command })
 			)
 			break
 
 		case 's':
-			// todo: remove state mutation.
-			result.board = input
-			result.events.push(makeEvent('board-set', { board: params }))
+			newEvents.push(makeEvent('board-set', { board: params }))
 			break
 
 		default:
-			result.events.push(makeEvent('got-command-unknown', { command }))
+			newEvents.push(makeEvent('got-command-unknown', { command }))
 	}
-	return result
+	return newEvents
 }
 
-/*
-// todo: implement this function.
 function boardFromEvents(events: EsEvent[]): Board {
-    log('boardFromEvents %O', events)
-    // todo: handle 'moved' event
-    // todo: handle 'board-set' event
-    return INITIAL_BOARD
-}
-*/
+	log('boardFromEvents %O', events)
 
-// todo: replace with events: EsEvent[].
-let board = INITIAL_BOARD
+	let board = INITIAL_BOARD
+
+	for (const event of events) {
+		if (event.name === 'moved') {
+			board = replaceAt(
+				normalizeBoard(board),
+				event.data.position,
+				event.data.player
+			)
+		}
+
+		if (event.name === 'started-new-game') {
+			board = INITIAL_BOARD
+		}
+
+		if (event.name === 'board-set') {
+			board = event.data.board
+		}
+	}
+	return board
+}
+
+let events: EsEvent[] = []
 
 let input = ''
 
@@ -273,7 +276,8 @@ let resultText = ''
 MAINLOOP: while (true) {
 	process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
 
-	const boardDetails = getDetails(board)
+	log('events: %O', events)
+	const boardDetails = getDetails(boardFromEvents(events))
 	log('boardDetails: %O', boardDetails)
 
 	let gameStatus = `Turn ${
@@ -289,7 +293,9 @@ MAINLOOP: while (true) {
 		menuText = `${menuText}${GAME_MENU_TEXT}`
 		if (boardDetails.winningRows.length) {
 			const winningPlayer =
-				board[parseInt(boardDetails.winningRows[0][0])].toUpperCase()
+				boardDetails.board[
+					parseInt(boardDetails.winningRows[0][0])
+				].toUpperCase()
 			gameStatus = `Player ${winningPlayer} won!`
 		} else {
 			gameStatus = 'Tie game...'
@@ -297,13 +303,15 @@ MAINLOOP: while (true) {
 	}
 
 	console.log()
-	console.log(renderBoard(board, gameStatus, lastInput, resultText))
+	console.log(
+		renderBoard(boardDetails.board, gameStatus, lastInput, resultText)
+	)
 	console.log(menuText)
 	input = prompt('Enter command (1-9/r/h/u/n/Q): ')
-	const result = processInput(input, boardDetails.board)
+	events = processInput(input, events)
 
 	resultText = ''
-	for (const event of result.events) {
+	for (const event of events) {
 		switch (event.name) {
 			case 'got-quit':
 				break MAINLOOP
@@ -325,6 +333,4 @@ MAINLOOP: while (true) {
 				log('Unknown event: %o', event)
 		}
 	}
-	// todo: remove state mutation.
-	board = result.board
 }
