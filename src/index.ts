@@ -115,7 +115,7 @@ function renderBoard(board: Board, line1 = '', line2 = '', line3 = '') {
 }
 
 // Derive useful info about game state from simple string representation of board.
-function getDetails(boardOrState: Board | BoardDetails) {
+function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
 	if (typeof boardOrState !== 'string') {
 		return boardOrState as BoardDetails
 	}
@@ -142,9 +142,11 @@ function getDetails(boardOrState: Board | BoardDetails) {
 		)
 	})
 
-	const validMoves = winningRows.length
-		? []
-		: ([...board.matchAll(/_/g)] || []).map((match) => match.index)
+	const validMoves = (
+		winningRows.length
+			? []
+			: ([...board.matchAll(/_/g)] || []).map((match) => match.index)
+	) as number[]
 
 	return {
 		board: prettyBoard(board),
@@ -156,44 +158,31 @@ function getDetails(boardOrState: Board | BoardDetails) {
 	}
 }
 
-// todo?: inline into processInput()?
-function processMove(position: number, events: EsEvent[]) {
-	const newEvents = [...events]
-	const boardDetails = getDetails(boardFromEvents(events))
-
-	const player: Player = boardDetails.currentPlayer
-	if (boardDetails.validMoves.includes(position)) {
-		newEvents.push(makeEvent('moved', { player, position }))
-
-		// todo?: remove unused 'game-won', 'game-tied' events?
-		// question: nextState not needed in this decider function; generally true for all deciders?
-		/*
-		const nextState = getDetails(result.board)
-		const winningRows = nextState.winningRows
-		if (winningRows.length) {
-			result.events.push(
-				makeEvent('game-won', {
-					player,
-					winningRows,
-				})
-			)
-		} else if (!nextState.validMoves.length) {
-			result.events.push(makeEvent('game-tied'))
-		}
-        */
-	} else {
-		newEvents.push(makeEvent('got-invalid-move', { player, position }))
-	}
-	return newEvents
-}
-
 // question: naming convention for events?
 function processInput(input: string, events: EsEvent[]) {
 	let newEvents = [...events]
 
-	const boardDetails = getDetails(boardFromEvents(events))
+	const boardDetails: BoardDetails = getDetails(boardFromEvents(events))
 
 	const { command, params } = parseInput(input)
+
+	function processMove(position: number | undefined, type: string) {
+		const newEvents = [...events]
+
+		const player: Player = boardDetails.currentPlayer
+		if (boardDetails.validMoves.includes(position || 0)) {
+			newEvents.push(makeEvent('moved', { player, position, type }))
+		} else {
+			newEvents.push(
+				makeEvent('got-invalid-move', {
+					player,
+					position,
+					type: 'invalid',
+				})
+			)
+		}
+		return newEvents
+	}
 
 	switch (command) {
 		case 'q':
@@ -205,23 +194,11 @@ function processInput(input: string, events: EsEvent[]) {
 			break
 
 		case 'm':
-			newEvents = processMove(parseInt(params, 10), events)
+			newEvents = processMove(parseInt(params, 10), 'move')
 			break
 
 		case 'r':
-			if (boardDetails.validMoves.length) {
-				newEvents = processMove(
-					_.sample(boardDetails.validMoves),
-					events
-				)
-			} else {
-				newEvents.push(
-					makeEvent('got-invalid-move', {
-						player: boardDetails.currentPlayer,
-						position: '0',
-					})
-				)
-			}
+			newEvents = processMove(_.sample(boardDetails.validMoves), 'random')
 			break
 
 		case 'u':
