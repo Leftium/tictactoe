@@ -20,6 +20,9 @@ const GAME_MENU_TEXT = `       [U]ndo last move  (TODO)
        [Q]uit\n`
 
 const DEFAULT_COMMAND = 'r'
+const PROMPT =
+	'Enter command ' +
+	'(1-9/r/h/u/n/q): '.replace(DEFAULT_COMMAND, DEFAULT_COMMAND.toUpperCase())
 
 // idea: add type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; use in types below.
 
@@ -284,7 +287,7 @@ MAINLOOP: while (true) {
 		renderBoard(boardDetails.board, gameStatus, lastInput, resultText)
 	)
 	console.log(menuText)
-	input = prompt('Enter command (1-9/r/h/u/n/Q): ')
+	input = prompt(PROMPT)
 	events = processInput(input, events)
 
 	resultText = ''
