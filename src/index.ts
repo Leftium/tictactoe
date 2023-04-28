@@ -24,7 +24,7 @@ const PROMPT =
 	'Enter command ' +
 	'(1-9/r/h/u/n/q): '.replace(DEFAULT_COMMAND, DEFAULT_COMMAND.toUpperCase())
 
-// idea: add type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; use in types below.
+type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 // A string with 3 positions.
 type Row = '123' | '456' | '789' | '147' | '258' | '369' | '159' | '357'
@@ -169,11 +169,11 @@ function processInput(input: string, events: EsEvent[]) {
 
 	const { command, params } = parseInput(input)
 
-	function processMove(position: number | undefined, type: string) {
+	function processMove(position: Position | undefined, type: string) {
 		const newEvents = [...events]
 
 		const player: Player = boardDetails.currentPlayer
-		if (boardDetails.validMoves.includes(position || 0)) {
+		if (position && boardDetails.validMoves.includes(position)) {
 			newEvents.push(makeEvent('moved', { player, position, type }))
 		} else {
 			newEvents.push(
