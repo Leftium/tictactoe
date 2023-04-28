@@ -6,9 +6,6 @@ const log = debugFactory('log')
 import promptFactory from 'prompt-sync'
 const prompt = promptFactory({ sigint: true })
 
-// Prevent lodash from being treeshaken out.
-log('Lodash: %s', _.VERSION)
-
 const MOVE_MENU_TEXT = `1 2 3
 4 5 6  [1-9] Make move corresponding to square
 7 8 9
