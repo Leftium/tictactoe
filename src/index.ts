@@ -64,6 +64,15 @@ type EsEvent = {
 	data: unknown
 }
 
+type EventDataMoved = {
+	position: Position
+	player: Player
+}
+
+type EventDataSet = {
+	board: Board
+}
+
 function makeEvent(name: string, data?: unknown) {
 	return { name, data }
 }
@@ -197,11 +206,14 @@ function processInput(input: string, events: EsEvent[]) {
 			break
 
 		case 'm':
-			newEvents = processMove(parseInt(params, 10), 'move')
+			newEvents = processMove(parseInt(params, 10) as Position, 'move')
 			break
 
 		case 'r':
-			newEvents = processMove(_.sample(boardDetails.validMoves), 'random')
+			newEvents = processMove(
+				_.sample(boardDetails.validMoves) as Position | undefined,
+				'random'
+			)
 			break
 
 		case 'u':
@@ -230,8 +242,8 @@ function boardFromEvents(events: EsEvent[]): Board {
 		if (event.name === 'moved') {
 			board = replaceAt(
 				normalizeBoard(board),
-				event.data.position,
-				event.data.player
+				(event.data as EventDataMoved).position,
+				(event.data as EventDataMoved).player
 			)
 		}
 
@@ -240,7 +252,7 @@ function boardFromEvents(events: EsEvent[]): Board {
 		}
 
 		if (event.name === 'board-set') {
-			board = event.data.board
+			board = (event.data as EventDataSet).board
 		}
 	}
 	return board
@@ -305,8 +317,10 @@ MAINLOOP: while (true) {
 				break
 
 			case 'moved':
-				resultText = `Player ${event.data.player.toUpperCase()} played square ${
-					event.data.position
+				resultText = `Player ${(
+					event.data as EventDataMoved
+				).player.toUpperCase()} played square ${
+					(event.data as EventDataMoved).position
 				}`
 				break
 			default:
