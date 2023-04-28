@@ -176,7 +176,7 @@ function processInput(input: string, events: EsEvent[]) {
 	const { command, params } = parseInput(input)
 
 	function processMove(position: Position | undefined, type: string) {
-		const newEvents = [...events]
+		const newEvents = []
 
 		const player: Player = boardDetails.currentPlayer
 		if (position && boardDetails.validMoves.includes(position)) {
@@ -256,6 +256,7 @@ function boardFromEvents(events: EsEvent[]): Board {
 }
 
 let events: EsEvent[] = []
+let newEvents: EsEvent[]
 
 let input = ''
 
@@ -297,10 +298,12 @@ MAINLOOP: while (true) {
 	)
 	console.log(menuText)
 	input = prompt(PROMPT)
-	events = processInput(input, events)
+	newEvents = processInput(input, events)
+	events = [...events, ...newEvents]
 
 	resultText = ''
-	for (const event of events) {
+
+	for (const event of newEvents) {
 		switch (event.name) {
 			case 'got-quit':
 				break MAINLOOP
