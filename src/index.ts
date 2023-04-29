@@ -123,6 +123,15 @@ function renderBoard(board: Board, line1 = '', line2 = '', line3 = '') {
 	)
 }
 
+// Computer-friendly array from human-friendly string:
+function getPositions(row: Row): [Position, Position, Position] {
+	return [
+		parseInt(row[0], 10) as Position,
+		parseInt(row[1], 10) as Position,
+		parseInt(row[2], 10) as Position,
+	]
+}
+
 // Derive useful info about game state from simple string representation of board.
 function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
 	if (typeof boardOrState !== 'string') {
@@ -142,12 +151,11 @@ function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
 	const currentPlayer = (turnNumber % 2 ? 'x' : 'o') as Player
 
 	const winningRows = ROWS.filter((row) => {
-		// Computer-friendly array from human-friendly string:
-		const intRow = row.split('').map((c) => parseInt(c, 10))
+		const positions = getPositions(row)
 		return (
-			board[intRow[0]] !== '_' &&
-			board[intRow[0]] === board[intRow[1]] &&
-			board[intRow[0]] === board[intRow[2]]
+			board[positions[0]] !== '_' &&
+			board[positions[0]] === board[positions[1]] &&
+			board[positions[0]] === board[positions[2]]
 		)
 	})
 
@@ -165,6 +173,60 @@ function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
 		validMoves,
 		winningRows,
 	}
+}
+
+/* Value of row based on count of players:
+    EMO = Empty Mine Opponent
+    120: 1_000_000, // Win
+    102:   100_000, // Block win
+    210:    10_000, // Almost win
+    201:     1_000, // Block almost win
+    300:       100, // Open
+    111:        10, // Blocked
+    021:         1, // No move
+    012:         1, // No move
+    030:         1, // No move
+    003:         1, // No move
+*/
+
+type RowDetails = {
+	row: Row
+	emo: number
+	value: number
+	positions?: [Position, Position, Position]
+}
+
+type PositionDetails = {
+	position: Position
+	score: number
+	emos: number[]
+}
+
+const heuristicAiMove = (boardDetails: BoardDetails): Position | undefined => {
+	const rowData: RowDetails[] = ROWS.map((row) => ({
+		row,
+		emo: 0,
+		value: 0,
+		positions: getPositions(row),
+	}))
+	log(rowData)
+
+	const positionData: PositionDetails[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(
+		(position) => ({ position: position as Position, score: 0, emos: [] })
+	)
+	log(positionData)
+
+	// For each Row:
+	//     Compute EMO/value.
+	//     For each Position in Row:
+	//         Add row.value to positionData[position].score.
+
+	// Filter out invalid positions.
+	// If not first move: (first move always random to make more interesting)
+	//     Filter out low-scoring positions.
+	// Sample from remaining positions.
+
+	return undefined
 }
 
 // question: naming convention for events?
@@ -213,8 +275,14 @@ function processInput(input: string, events: EsEvent[]) {
 			)
 			break
 
-		case 'u':
 		case 'h':
+			newEvents = processMove(
+				heuristicAiMove(boardDetails),
+				'heuristic-ai'
+			)
+			break
+
+		case 'u':
 			newEvents.push(
 				makeEvent('got-command-not-implemented', { command })
 			)
@@ -231,8 +299,6 @@ function processInput(input: string, events: EsEvent[]) {
 }
 
 function boardFromEvents(events: EsEvent[]): Board {
-	log('boardFromEvents %O', events)
-
 	let board = INITIAL_BOARD
 
 	for (const event of events) {
@@ -264,7 +330,9 @@ let resultText = ''
 
 // eslint-disable-next-line no-constant-condition
 MAINLOOP: while (true) {
-	process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
+	if (!process.env.DEBUG) {
+		process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
+	}
 
 	log('events: %O', events)
 	const boardDetails = getDetails(boardFromEvents(events))
