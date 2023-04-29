@@ -1,26 +1,3 @@
-import _ from 'lodash'
-
-import debugFactory from 'debug'
-const log = debugFactory('log')
-
-import promptFactory from 'prompt-sync'
-const prompt = promptFactory({ sigint: true })
-
-const MOVE_MENU_TEXT = `1 2 3
-4 5 6  [1-9] Make move corresponding to square
-7 8 9
-       [R]andom square   [Default]
-       [H]euristic AI    (TODO)`
-
-const GAME_MENU_TEXT = `       [U]ndo last move  (TODO)
-       [N]ew Game
-       [Q]uit\n`
-
-const DEFAULT_COMMAND = 'r'
-const PROMPT =
-	'Enter command ' +
-	'(1-9/r/h/u/n/q): '.replace(DEFAULT_COMMAND, DEFAULT_COMMAND.toUpperCase())
-
 type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 // A string with 3 positions.
@@ -30,8 +7,6 @@ const ROWS: Row[] = ['123', '456', '789', '147', '258', '369', '159', '357']
 
 // A Board is a '#' followed by 9 characters in the set [XxOo_].
 type Board = string
-
-const INITIAL_BOARD = '___ ___ ___'
 
 // idea: define more strict type NormalizedBoard.
 // idea: define const PLAYER_X, PLAYER_O
@@ -69,6 +44,50 @@ type EventDataMoved = {
 type EventDataSet = {
 	board: Board
 }
+
+type RowDetails = {
+	row: Row
+	emo: number
+	value: number
+	positions?: [Position, Position, Position]
+}
+
+type PositionDetails = {
+	position: Position
+	score: number
+	emos: number[]
+}
+
+import _ from 'lodash'
+
+import debugFactory from 'debug'
+const log = debugFactory('log')
+
+import promptFactory from 'prompt-sync'
+const prompt = promptFactory({ sigint: true })
+
+const MOVE_MENU_TEXT = `1 2 3
+4 5 6  [1-9] Make move corresponding to square
+7 8 9
+       [R]andom square   [Default]
+       [H]euristic AI    (TODO)`
+
+const GAME_MENU_TEXT = `       [U]ndo last move  (TODO)
+       [N]ew Game
+       [Q]uit\n`
+
+const DEFAULT_COMMAND = 'r'
+const PROMPT =
+	'Enter command ' +
+	'(1-9/r/h/u/n/q): '.replace(DEFAULT_COMMAND, DEFAULT_COMMAND.toUpperCase())
+
+const INITIAL_BOARD = '___ ___ ___'
+
+let events: EsEvent[] = []
+let newEvents: EsEvent[]
+
+let input = ''
+let resultText = ''
 
 function makeEvent(name: string, data?: unknown) {
 	return { name, data }
@@ -189,19 +208,6 @@ function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
     003:         1, // No move
 */
 
-type RowDetails = {
-	row: Row
-	emo: number
-	value: number
-	positions?: [Position, Position, Position]
-}
-
-type PositionDetails = {
-	position: Position
-	score: number
-	emos: number[]
-}
-
 const heuristicAiMove = (boardDetails: BoardDetails): Position | undefined => {
 	const rowData: RowDetails[] = ROWS.map((row) => ({
 		row,
@@ -237,18 +243,18 @@ function processInput(input: string, events: EsEvent[]) {
 
 	const { command, params } = parseInput(input)
 
-	function processMove(position: Position | undefined, type: string) {
+	function processMove(position: Position | undefined, memo: string) {
 		const newEvents = []
 
 		const player: Player = boardDetails.currentPlayer
 		if (position && boardDetails.validMoves.includes(position)) {
-			newEvents.push(makeEvent('moved', { player, position, type }))
+			newEvents.push(makeEvent('moved', { player, position, memo }))
 		} else {
 			newEvents.push(
 				makeEvent('got-invalid-move', {
 					player,
 					position,
-					type: 'invalid',
+					memo: 'invalid',
 				})
 			)
 		}
@@ -320,13 +326,6 @@ function boardFromEvents(events: EsEvent[]): Board {
 	}
 	return board
 }
-
-let events: EsEvent[] = []
-let newEvents: EsEvent[]
-
-let input = ''
-
-let resultText = ''
 
 // eslint-disable-next-line no-constant-condition
 MAINLOOP: while (true) {
