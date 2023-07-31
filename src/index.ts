@@ -8,15 +8,7 @@ const prompt = promptFactory({ sigint: true })
 
 type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-type Row =
-	| [1, 2, 3]
-	| [4, 5, 6]
-	| [7, 8, 9]
-	| [1, 4, 7]
-	| [2, 5, 8]
-	| [3, 6, 9]
-	| [1, 5, 9]
-	| [3, 5, 7]
+type Row = [Position, Position, Position]
 
 const ROWS: Row[] = [
 	[1, 2, 3],
@@ -35,7 +27,7 @@ type TicTacToeSquare = Player | '_'
 
 // A Board is a '#' followed by 9 TicTacToeSquares.
 type Board = [
-	'#',
+	'#', // Fills 0 index for 1-based indexing.
 	TicTacToeSquare,
 	TicTacToeSquare,
 	TicTacToeSquare,
@@ -57,7 +49,6 @@ function boardFromString(string: string): Board {
 
 // The Board contains everything we need to know about the game state;
 // other properties are derived for convenience.
-
 // idea: restrict values for counts, turnNumber
 type BoardDetails = {
 	board: Board
@@ -91,7 +82,6 @@ type RowDetails = {
 	row: Row
 	emo: number
 	value: number
-	positions?: [Position, Position, Position]
 }
 
 type PositionDetails = {
@@ -198,6 +188,10 @@ function getDetails(board: Board): BoardDetails {
 	}
 }
 
+const randomMove = (validMoves: Position[]) => {
+	return _.sample(validMoves)
+}
+
 /* Value of row based on count of players:
     EMO = Empty Mine Opponent
     120: 1_000_000, // Win
@@ -211,32 +205,36 @@ function getDetails(board: Board): BoardDetails {
     030:         1, // No move
     003:         1, // No move
 */
-
 const heuristicAiMove = (boardDetails: BoardDetails): Position | undefined => {
-	const rowData: RowDetails[] = ROWS.map((row) => ({
-		row,
-		emo: 0,
-		value: 0,
-		positions: row,
-	}))
-	log(rowData)
-
-	const positionData: PositionDetails[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(
-		(position) => ({ position: position as Position, score: 0, emos: [] })
-	)
-	log(positionData)
-
-	log(boardDetails)
-
 	// For each Row:
 	//     Compute EMO/value.
 	//     For each Position in Row:
-	//         Add row.value to positionData[position].score.
+	//         Add row.value to PositionDetails[position].score.
 
-	// Filter out invalid positions.
 	// If not first move: (first move always random to make more interesting)
 	//     Filter out low-scoring positions.
 	// Sample from remaining positions.
+
+	const positionDetails: PositionDetails[] = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(
+		(position) => ({
+			position: position as Position,
+			score: 0,
+			emos: [],
+		})
+	)
+
+	const rowDetails: RowDetails[] = ROWS.map((row) => ({
+		row,
+		emo: 0,
+		value: 0,
+	}))
+
+	// TODO: Fill details in.
+
+	log('C. heuristicAiMove')
+	log(rowDetails)
+	log(positionDetails)
+	log(boardDetails)
 
 	return undefined
 }
@@ -282,7 +280,7 @@ function processInput(input: string, events: EsEvent[]) {
 
 		case 'r':
 			newEvents = processMove(
-				_.sample(boardDetails.validMoves) as Position | undefined,
+				randomMove(boardDetails.validMoves),
 				'random'
 			)
 			break
@@ -339,9 +337,9 @@ MAINLOOP: while (true) {
 		process.stdout.write('\u001b[2J\u001b[0;0H') // Clear terminal and move cursor to 0,0
 	}
 
-	log('events: %O', events)
+	// log('A. events: %O', events)
 	const boardDetails = getDetails(boardFromEvents(events))
-	log('boardDetails: %O', boardDetails)
+	// log('B. boardDetails: %O', boardDetails)
 
 	let gameStatus = `Turn ${
 		boardDetails.turnNumber
