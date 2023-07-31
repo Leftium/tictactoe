@@ -1,17 +1,59 @@
+import _ from 'lodash'
+
+import debugFactory from 'debug'
+const log = debugFactory('log')
+
+import promptFactory from 'prompt-sync'
+const prompt = promptFactory({ sigint: true })
+
 type Position = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-// A string with 3 positions.
-type Row = '123' | '456' | '789' | '147' | '258' | '369' | '159' | '357'
+type Row =
+	| [1, 2, 3]
+	| [4, 5, 6]
+	| [7, 8, 9]
+	| [1, 4, 7]
+	| [2, 5, 8]
+	| [3, 6, 9]
+	| [1, 5, 9]
+	| [3, 5, 7]
 
-const ROWS: Row[] = ['123', '456', '789', '147', '258', '369', '159', '357']
-
-// A Board is a '#' followed by 9 characters in the set [XxOo_].
-type Board = string
-
-// idea: define more strict type NormalizedBoard.
-// idea: define const PLAYER_X, PLAYER_O
+const ROWS: Row[] = [
+	[1, 2, 3],
+	[4, 5, 6],
+	[7, 8, 9],
+	[1, 4, 7],
+	[2, 5, 8],
+	[3, 6, 9],
+	[1, 5, 9],
+	[3, 5, 7],
+]
 
 type Player = 'x' | 'o'
+
+type TicTacToeSquare = Player | '_'
+
+// A Board is a '#' followed by 9 TicTacToeSquares.
+type Board = [
+	'#',
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare,
+	TicTacToeSquare
+]
+
+function boardFromString(string: string): Board {
+	const normalizedString = string
+		.replace(/[^XxOo_]/g, '')
+		.padEnd(9, '_')
+		.substring(0, 9)
+	return ['#'].concat(normalizedString.split('')) as Board
+}
 
 // The Board contains everything we need to know about the game state;
 // other properties are derived for convenience.
@@ -26,7 +68,7 @@ type BoardDetails = {
 	}
 	turnNumber: number
 	currentPlayer: Player
-	validMoves: number[]
+	validMoves: Position[]
 	winningRows: Row[]
 }
 
@@ -42,7 +84,7 @@ type EventDataMoved = {
 }
 
 type EventDataSet = {
-	board: Board
+	board: string
 }
 
 type RowDetails = {
@@ -57,14 +99,6 @@ type PositionDetails = {
 	score: number
 	emos: number[]
 }
-
-import _ from 'lodash'
-
-import debugFactory from 'debug'
-const log = debugFactory('log')
-
-import promptFactory from 'prompt-sync'
-const prompt = promptFactory({ sigint: true })
 
 const MOVE_MENU_TEXT = `1 2 3
 4 5 6  [1-9] Make move corresponding to square
@@ -81,7 +115,7 @@ const PROMPT =
 	'Enter command ' +
 	'(1-9/r/h/u/n/q): '.replace(DEFAULT_COMMAND, DEFAULT_COMMAND.toUpperCase())
 
-const INITIAL_BOARD = '___ ___ ___'
+const INITIAL_BOARD = boardFromString('___ ___ ___')
 
 let events: EsEvent[] = []
 let newEvents: EsEvent[]
@@ -93,8 +127,10 @@ function makeEvent(name: string, data?: unknown) {
 	return { name, data }
 }
 
-function replaceAt(s: string, index: number, replacement: string) {
-	return s.substring(0, index) + replacement + s.substring(index + 1)
+function replaceAt(board: Board, index: Position, replacement: Player): Board {
+	const newBoard: Board = [...board]
+	newBoard[index] = replacement
+	return newBoard
 }
 
 // Split input into command and params.
@@ -115,26 +151,8 @@ function parseInput(input: string) {
 	return { command, params }
 }
 
-// 1. Strip insignificant characters.
-// 2. Lower case.
-// 3. Prepend # so positions match array indices.
-function normalizeBoard(board: Board) {
-	return (
-		'#' +
-		board
-			.replace(/[^xXoO_]/g, '')
-			.toLowerCase()
-			.padEnd(9, '_')
-	)
-}
-
-// For output in nice standard format.
-function prettyBoard(board: Board) {
-	return normalizeBoard(board).slice(1).replace(/.../g, '$& ').slice(0, -1)
-}
-
 function renderBoard(board: Board, line1 = '', line2 = '', line3 = '') {
-	const b = normalizeBoard(board).replace(/_/g, ' ')
+	const b = board.map((item) => (item === '_' ? ' ' : item))
 	return (
 		` ${b[1]} | ${b[2]} | ${b[3]}      ${line1}\n---+---+---\n` +
 		` ${b[4]} | ${b[5]} | ${b[6]}      ${line2}\n---+---+---\n` +
@@ -142,27 +160,12 @@ function renderBoard(board: Board, line1 = '', line2 = '', line3 = '') {
 	)
 }
 
-// Computer-friendly array from human-friendly string:
-function getPositions(row: Row): [Position, Position, Position] {
-	return [
-		parseInt(row[0], 10) as Position,
-		parseInt(row[1], 10) as Position,
-		parseInt(row[2], 10) as Position,
-	]
-}
-
-// Derive useful info about game state from simple string representation of board.
-function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
-	if (typeof boardOrState !== 'string') {
-		return boardOrState as BoardDetails
-	}
-
-	const board = normalizeBoard(boardOrState)
-
+// Derive useful info about game state from a Board.
+function getDetails(board: Board): BoardDetails {
 	const counts = {
-		x: (board.match(/x/g) || []).length,
-		o: (board.match(/o/g) || []).length,
-		_: (board.match(/_/g) || []).length,
+		x: board.filter((square) => square == 'x').length,
+		o: board.filter((square) => square == 'o').length,
+		_: board.filter((square) => square == '_').length,
 	}
 
 	const turnNumber = 10 - counts._
@@ -170,22 +173,23 @@ function getDetails(boardOrState: Board | BoardDetails): BoardDetails {
 	const currentPlayer = (turnNumber % 2 ? 'x' : 'o') as Player
 
 	const winningRows = ROWS.filter((row) => {
-		const positions = getPositions(row)
 		return (
-			board[positions[0]] !== '_' &&
-			board[positions[0]] === board[positions[1]] &&
-			board[positions[0]] === board[positions[2]]
+			board[row[0]] !== '_' &&
+			board[row[0]] === board[row[1]] &&
+			board[row[0]] === board[row[2]]
 		)
 	})
 
-	const validMoves = (
-		winningRows.length
-			? []
-			: ([...board.matchAll(/_/g)] || []).map((match) => match.index)
-	) as number[]
+	const validMoves = winningRows.length
+		? []
+		: board.reduce(
+				(moves: Position[], square, index) =>
+					square === '_' ? [...moves, index as Position] : moves,
+				[]
+		  )
 
 	return {
-		board: prettyBoard(board),
+		board,
 		counts,
 		turnNumber,
 		currentPlayer,
@@ -213,7 +217,7 @@ const heuristicAiMove = (boardDetails: BoardDetails): Position | undefined => {
 		row,
 		emo: 0,
 		value: 0,
-		positions: getPositions(row),
+		positions: row,
 	}))
 	log(rowData)
 
@@ -221,6 +225,8 @@ const heuristicAiMove = (boardDetails: BoardDetails): Position | undefined => {
 		(position) => ({ position: position as Position, score: 0, emos: [] })
 	)
 	log(positionData)
+
+	log(boardDetails)
 
 	// For each Row:
 	//     Compute EMO/value.
@@ -310,7 +316,7 @@ function boardFromEvents(events: EsEvent[]): Board {
 	for (const event of events) {
 		if (event.name === 'moved') {
 			board = replaceAt(
-				normalizeBoard(board),
+				board,
 				(event.data as EventDataMoved).position,
 				(event.data as EventDataMoved).player
 			)
@@ -321,7 +327,7 @@ function boardFromEvents(events: EsEvent[]): Board {
 		}
 
 		if (event.name === 'board-set') {
-			board = (event.data as EventDataSet).board
+			board = boardFromString((event.data as EventDataSet).board)
 		}
 	}
 	return board
@@ -349,9 +355,8 @@ MAINLOOP: while (true) {
 	} else {
 		menuText = `${menuText}${GAME_MENU_TEXT}`
 		if (boardDetails.winningRows.length) {
-			const winningPlayer = normalizeBoard(boardDetails.board)[
-				parseInt(boardDetails.winningRows[0][0])
-			].toUpperCase()
+			const winningPlayer =
+				boardDetails.board[boardDetails.winningRows[0][0]]
 			gameStatus = `Player ${winningPlayer} won!`
 		} else {
 			gameStatus = 'Tie game...'
