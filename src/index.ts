@@ -349,10 +349,9 @@ MAINLOOP: while (true) {
 	} else {
 		menuText = `${menuText}${GAME_MENU_TEXT}`
 		if (boardDetails.winningRows.length) {
-			const winningPlayer =
-				boardDetails.board[
-					parseInt(boardDetails.winningRows[0][0])
-				].toUpperCase()
+			const winningPlayer = normalizeBoard(boardDetails.board)[
+				parseInt(boardDetails.winningRows[0][0])
+			].toUpperCase()
 			gameStatus = `Player ${winningPlayer} won!`
 		} else {
 			gameStatus = 'Tie game...'
